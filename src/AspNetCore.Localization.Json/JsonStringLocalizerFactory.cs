@@ -6,8 +6,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.OptionsModel;
-using Microsoft.Extensions.PlatformAbstractions;
+using Microsoft.Extensions.Options;
 
 namespace Localization.JsonLocalizer.StringLocalizer
 {
@@ -18,18 +17,13 @@ namespace Localization.JsonLocalizer.StringLocalizer
         private readonly ConcurrentDictionary<string, JsonStringLocalizer> _localizerCache =
             new ConcurrentDictionary<string, JsonStringLocalizer>();
         
-        private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly ILogger<JsonStringLocalizerFactory> _logger;
         private string _resourcesRelativePath;
+        private string _applicationName;
 
-        public JsonStringLocalizerFactory(IApplicationEnvironment applicationEnvironment,
-                                          IOptions<JsonLocalizationOptions> localizationOptions,
+        public JsonStringLocalizerFactory(IOptions<JsonLocalizationOptions> localizationOptions,
                                           ILogger<JsonStringLocalizerFactory> logger)
         {
-            if (applicationEnvironment == null)
-            {
-                throw new ArgumentNullException(nameof(applicationEnvironment));
-            }
             if (localizationOptions == null)
             {
                 throw new ArgumentNullException(nameof(localizationOptions));
@@ -39,7 +33,6 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 throw new ArgumentNullException(nameof(logger));
             }
 
-            this._applicationEnvironment = applicationEnvironment;
             this._logger = logger;
             
             _resourcesRelativePath = localizationOptions.Value.ResourcesPath ?? string.Empty;
@@ -50,8 +43,9 @@ namespace Localization.JsonLocalizer.StringLocalizer
                     .Replace(Path.DirectorySeparatorChar, '.') + ".";
             }
             
-            logger.LogVerbose($"Created {nameof(JsonStringLocalizerFactory)} with:{Environment.NewLine}" +
-                $"    (application name: {applicationEnvironment.ApplicationName}{Environment.NewLine}" +
+            _applicationName = Assembly.GetEntryAssembly().GetName().Name;
+            logger.LogDebug($"Created {nameof(JsonStringLocalizerFactory)} with:{Environment.NewLine}" +
+                $"    (application name: {_applicationName}{Environment.NewLine}" +
                 $"    (resources relative path: {_resourcesRelativePath})");
         }
 
@@ -62,7 +56,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 throw new ArgumentNullException(nameof(resourceSource));
             }
             
-            _logger.LogVerbose($"Getting localizer for type {resourceSource}");
+            _logger.LogDebug($"Getting localizer for type {resourceSource}");
             
             var typeInfo = resourceSource.GetTypeInfo();
             var assembly = typeInfo.Assembly;
@@ -70,12 +64,12 @@ namespace Localization.JsonLocalizer.StringLocalizer
             // Re-root the base name if a resources path is set.
             var resourceBaseName = string.IsNullOrEmpty(_resourcesRelativePath)
                 ? typeInfo.FullName
-                : _applicationEnvironment.ApplicationName + "." + _resourcesRelativePath +
-                    LocalizerUtil.TrimPrefix(typeInfo.FullName, _applicationEnvironment.ApplicationName + ".");
-            _logger.LogVerbose($"Localizer basename: {resourceBaseName}");
+                : _applicationName + "." + _resourcesRelativePath +
+                    LocalizerUtil.TrimPrefix(typeInfo.FullName, _applicationName + ".");
+            _logger.LogDebug($"Localizer basename: {resourceBaseName}");
 
             return _localizerCache.GetOrAdd(
-                resourceBaseName, new JsonStringLocalizer(resourceBaseName, _applicationEnvironment.ApplicationName, _logger));
+                resourceBaseName, new JsonStringLocalizer(resourceBaseName, _applicationName, _logger));
         }
 
         public IStringLocalizer Create(string baseName, string location)
@@ -85,9 +79,9 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 throw new ArgumentNullException(nameof(baseName));
             }
             
-            _logger.LogVerbose($"Getting localizer for baseName {baseName} and location {location}");
+            _logger.LogDebug($"Getting localizer for baseName {baseName} and location {location}");
             
-            location = location ?? _applicationEnvironment.ApplicationName;
+            location = location ?? _applicationName;
             
             // Re-root base name if a resources path is set and strip the cshtml part.
             var resourceBaseName = location + "." + _resourcesRelativePath + LocalizerUtil.TrimPrefix(baseName, location + ".");
@@ -98,10 +92,10 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 resourceBaseName = resourceBaseName.Substring(0, resourceBaseName.Length - viewExtension.Length);
             }
             
-            _logger.LogVerbose($"Localizer basename: {resourceBaseName}");
+            _logger.LogDebug($"Localizer basename: {resourceBaseName}");
             
             return _localizerCache.GetOrAdd(
-                resourceBaseName, new JsonStringLocalizer(resourceBaseName, _applicationEnvironment.ApplicationName, _logger));
+                resourceBaseName, new JsonStringLocalizer(resourceBaseName, _applicationName, _logger));
         }
     }
 }

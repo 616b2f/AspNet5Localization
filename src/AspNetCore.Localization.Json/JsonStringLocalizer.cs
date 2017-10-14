@@ -33,7 +33,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
             _resourceFileLocations = LocalizerUtil.ExpandPaths(baseName, applicationName).ToList();
             foreach (var resFileLocation in _resourceFileLocations)
             {
-                logger.LogVerbose($"Resource file location base path: {resFileLocation}");
+                logger.LogDebug($"Resource file location base path: {resFileLocation}");
             }
         }
 
@@ -46,7 +46,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
                     throw new ArgumentNullException(nameof(name));
                 }
 
-                var value = GetLocalizedString(name);
+                var value = GetLocalizedString(name, null);
                 return new LocalizedString(name, value ?? name, resourceNotFound: value == null);
             }
         }
@@ -60,7 +60,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
                     throw new ArgumentNullException(nameof(name));
                 }
 
-                var format = GetLocalizedString(name);
+                var format = GetLocalizedString(name, null);
                 var value = string.Format(format ?? name, arguments);
                 return new LocalizedString(name, value, resourceNotFound: format == null);
             }
@@ -87,7 +87,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
             throw new NotImplementedException();
         }
 
-        private string GetLocalizedString(string name)
+        private string GetLocalizedString(string name, CultureInfo culture)
         {
             if (name == null)
             {
@@ -96,7 +96,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
 
             // Attempt to get resource with the given name from the resource object. if not found, try parent
             // resource object until parent begets himself.
-            var currentCulture = CultureInfo.CurrentCulture;
+            var currentCulture = culture ?? CultureInfo.CurrentUICulture;
             CultureInfo previousCulture = null;
             do
             {
@@ -118,7 +118,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 // Consult parent culture.
                 previousCulture = currentCulture;
                 currentCulture = currentCulture.Parent;
-                _logger.LogVerbose($"Switching to parent culture {currentCulture} for key '{name}'.");
+                _logger.LogDebug($"Switching to parent culture {currentCulture} for key '{name}'.");
             } while (previousCulture != currentCulture);
 
             _logger.LogInformation($"Could not find key '{name}' in resource file for base name {_baseName} and culture {CultureInfo.CurrentCulture}");
@@ -132,7 +132,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
                 throw new ArgumentNullException(nameof(currentCulture));
             }
 
-            _logger.LogVerbose($"Attempt to get resource object for culture {currentCulture}");
+            _logger.LogDebug($"Attempt to get resource object for culture {currentCulture}");
             var cultureSuffix = "." + currentCulture.Name;
             cultureSuffix = cultureSuffix == "." ? "" : cultureSuffix;
 
@@ -150,13 +150,13 @@ namespace Localization.JsonLocalizer.StringLocalizer
                     }
                     else
                     {
-                        _logger.LogVerbose($"Resource file location {resourcePath} does not exist");
+                        _logger.LogDebug($"Resource file location {resourcePath} does not exist");
                         resourcePath = null;
                     }
                 }
                 if (resourcePath == null)
                 {
-                    _logger.LogVerbose($"No resource file found for suffix {cultureSuffix}");
+                    _logger.LogDebug($"No resource file found for suffix {cultureSuffix}");
                     return null;
                 }
 
@@ -209,7 +209,7 @@ namespace Localization.JsonLocalizer.StringLocalizer
             }
 
             var cultureSuffixesLogString = string.Join(", ", cultureSuffixes);
-            _logger.LogVerbose($"Using culture suffixes {cultureSuffixesLogString}");
+            _logger.LogDebug($"Using culture suffixes {cultureSuffixesLogString}");
             return cultureSuffixes;
         }
     }
