@@ -29,10 +29,6 @@ namespace Microsoft.Extensions.DependencyInjection
                 typeof(IStringLocalizerFactory),
                 typeof(JsonStringLocalizerFactory),
                 ServiceLifetime.Singleton));
-            services.TryAdd(new ServiceDescriptor(
-                typeof(IStringLocalizer),
-                typeof(JsonStringLocalizer),
-                ServiceLifetime.Singleton));
 
             if (setupAction != null)
             {
