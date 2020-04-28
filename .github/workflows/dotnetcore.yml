@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - '*'
+env:
+  PROJECT_FILE: src/AspNetCore.Localization.Json/AspNetCore.Localization.Json.csproj 
 
 jobs:
   build:
@@ -17,9 +19,9 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.PROJECT_FILE }}
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore ${{ env.PROJECT_FILE }}
     - name: Authenticate to nuget.org
       uses: actions/setup-dotnet@v1
       with:
@@ -34,6 +36,6 @@ jobs:
         --output $GITHUB_WORKSPACE/dist 
         -p:PackageId=Kowalew.AspNetCore.Localization.Json
         -p:PackageVersion=0.1.2-alpha2
-        src/AspNetCore.Localization.Json/*.csproj
+        ${{ env.PROJECT_FILE }}
     - name: Push
       run: dotnet nuget push $GITHUB_WORKSPACE/dist/*.nupkg
