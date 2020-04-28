@@ -31,6 +31,7 @@ jobs:
     - name: Pack
       run: >
         dotnet pack 
+        --configuration Release 
         --no-build 
         --no-restore 
         --output $GITHUB_WORKSPACE/dist 
