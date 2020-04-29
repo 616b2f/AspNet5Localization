@@ -31,11 +31,13 @@ jobs:
         --configuration Release 
         --no-build 
         --no-restore 
-        --api-key ${{secrets.NUGETORG_PAT}}
-        --source https://api.nuget.org/v3/index.json
         --output $GITHUB_WORKSPACE/dist 
         -p:PackageId=Kowalew.AspNetCore.Localization.Json
         -p:PackageVersion=${{ steps.get_release_version.outputs.VERSION }}
         ${{ env.PROJECT_FILE }}
     - name: Push
-      run: dotnet nuget push $GITHUB_WORKSPACE/dist/*.nupkg
+      run: >
+        dotnet nuget push
+        --api-key ${{secrets.NUGETORG_PAT}}
+        --source https://api.nuget.org/v3/index.json
+        $GITHUB_WORKSPACE/dist/*.nupkg
