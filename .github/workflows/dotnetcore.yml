@@ -25,7 +25,7 @@ jobs:
     - name: Authenticate to nuget.org
       uses: actions/setup-dotnet@v1
       with:
-        source-url: https://api.nuget.org/v3/index.json
+        source-url: https://www.nuget.org/api/v2/package
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGETORG_PAT}}
     - name: Get release version
