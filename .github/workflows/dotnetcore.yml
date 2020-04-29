@@ -27,7 +27,9 @@ jobs:
       with:
         source-url: https://api.nuget.org/v3/index.json
       env:
-        NUGET_AUTH_TOKEN: ${{secrets.NUGETORG_PAT}} 
+        NUGET_AUTH_TOKEN: ${{secrets.NUGETORG_PAT}}
+    - name: tag number
+      run : echo ${{ github.event.release.tag_name }}
     - name: Pack
       run: >
         dotnet pack 
@@ -36,7 +38,7 @@ jobs:
         --no-restore 
         --output $GITHUB_WORKSPACE/dist 
         -p:PackageId=Kowalew.AspNetCore.Localization.Json
-        -p:PackageVersion=0.1.2-alpha2
+        -p:PackageVersion=${{ github.event.release.tag_name }}
         ${{ env.PROJECT_FILE }}
     - name: Push
       run: dotnet nuget push $GITHUB_WORKSPACE/dist/*.nupkg
