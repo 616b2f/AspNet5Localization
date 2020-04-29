@@ -22,15 +22,15 @@ jobs:
       run: dotnet restore ${{ env.PROJECT_FILE }}
     - name: Build
       run: dotnet build --configuration Release --no-restore ${{ env.PROJECT_FILE }}
-    - name: Authenticate to nuget.org
-      uses: actions/setup-dotnet@v1
+    - name: Get release version
+      id: get_release_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: Authenticate for nuget.org
+      uses: actions/setup-dotnet@master
       with:
         source-url: https://www.nuget.org/api/v2/package
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGETORG_PAT}}
-    - name: Get release version
-      id: get_release_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: Pack
       run: >
         dotnet pack 
